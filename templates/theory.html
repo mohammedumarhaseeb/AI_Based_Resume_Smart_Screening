@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <h2 class="mb-4 text-center">Understanding the Physics</h2>
+        
+        <div class="glass-card p-4 mb-4">
+            <h3 class="h4 text-white">Gravity: The Pull of Earth</h3>
+            <p>
+                Imagine Earth as a giant magnet that pulls everything toward its center. 
+                Sir Isaac Newton described this with his <strong>Law of Universal Gravitation</strong>. 
+                The heavier an object is, and the closer it is to Earth, the stronger the pull.
+            </p>
+            <div class="text-center my-4 p-3 rounded" style="background: rgba(0,0,0,0.2);">
+                <h4 style="color: var(--accent); font-family: monospace;">F = G * (m1 * m2) / r²</h4>
+                <p class="mb-0 text-muted small">Where G is the gravitational constant, m1 and m2 are masses, and r is the distance.</p>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 mb-4">
+            <h3 class="h4 text-white">Achieving Levitation ("Antigravity")</h3>
+            <p>
+                True "antigravity" (turning off gravity completely) belongs to science fiction. However, we can achieve 
+                <strong>levitation</strong> by matching gravity's downward pull with an equally strong upward push. 
+                This upward force is called the <strong>Opposing Force</strong>.
+            </p>
+            
+            <div class="row g-4 mt-2">
+                <div class="col-md-6">
+                    <div class="p-3 border rounded" style="border-color: rgba(255,255,255,0.1) !important;">
+                        <h5 class="text-white">Magnetic Levitation</h5>
+                        <p class="text-muted mb-0 small">Like poles of a magnet repel each other. Trains like the Maglev use powerful electromagnets to push off the track and float, bypassing friction.</p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="p-3 border rounded" style="border-color: rgba(255,255,255,0.1) !important;">
+                        <h5 class="text-white">Electrostatic Force</h5>
+                        <p class="text-muted mb-0 small">Using high voltages, static electricity can be used to repel extremely light weight materials by charging them identically to a base pad.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 text-center border-success bg-success bg-opacity-10">
+            <h3 class="h4 text-white">The Force Balancing Decision</h3>
+            <p class="mb-0 mt-3 text-white">
+                The physics rule to decide if an object lifts is simple:
+            </p>
+            <div class="mt-3 p-3 rounded bg-dark d-inline-block">
+                <code style="color: var(--success); font-size: 1.1rem;">IF (Opposing Force > Gravitational Force) THEN { Object Lifts = TRUE }</code>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

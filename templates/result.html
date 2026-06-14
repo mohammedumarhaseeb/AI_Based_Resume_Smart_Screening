@@ -1,0 +1,565 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="mb-4 d-flex justify-content-between align-items-center">
+    <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary shadow-sm px-3 rounded-pill">&larr; Back</a>
+    {% if role == "Candidate" %}
+    <button id="pdfDownloadBtn" onclick="downloadCandidatePDF()" class="btn btn-sm btn-primary shadow-sm px-3 rounded-pill">
+        <span id="pdfBtnText"><i class="bi bi-file-earmark-pdf me-1"></i> Download PDF Report</span>
+        <span id="pdfBtnLoading" class="d-none"><span class="spinner-border spinner-border-sm me-1"></span> Generating...</span>
+    </button>
+    {% endif %}
+</div>
+
+{% if role == "Candidate" %}
+<div class="row justify-content-center">
+    <div class="col-lg-7" id="candidateReport">
+        <div class="card shadow border-0 rounded-4 overflow-hidden mb-5" style="background-color: #f8f9fa;">
+            
+            <!-- Dark Blue Header -->
+            <div class="p-4 text-center text-white" style="background-color: #2c3e50;">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="Logo" class="mb-2" style="max-height: 50px; filter: brightness(0) invert(1);">
+                <h4 class="mb-0 fw-bold">AI Resume Analysis Report</h4>
+            </div>
+            
+            <div class="card-body p-4 p-md-5 bg-white m-3 rounded-4 shadow-sm">
+                
+                <!-- Candidate Name -->
+                <div class="bg-light rounded-3 p-3 mb-3 d-flex align-items-center">
+                    <i class="bi bi-person-fill text-primary fs-4 me-3"></i>
+                    <h5 class="mb-0 fw-bold">Candidate: <span class="text-dark">{{ name }}</span></h5>
+                </div>
+                
+                <!-- Job Role -->
+                <div class="bg-light rounded-3 p-3 mb-4 d-flex align-items-center">
+                    <i class="bi bi-briefcase-fill text-primary fs-4 me-3"></i>
+                    <h5 class="mb-0 fw-bold">Job Role: <span class="text-dark">{{ job_role }}</span></h5>
+                </div>
+                
+                <!-- Match Score -->
+                <div class="d-flex align-items-center mb-4">
+                    <i class="bi bi-check-circle-fill text-success fs-3 me-3"></i>
+                    <h5 class="mb-0 fw-bold me-3 text-nowrap">Match Score: <span class="text-success">{{ score|round|int }}%</span></h5>
+                    <div class="progress flex-grow-1" style="height: 14px; background-color: #e9ecef; border-radius: 7px;">
+                        <div class="progress-bar custom-success-bg" role="progressbar" style="width: {{ score|round|int }}%; border-radius: 7px;" aria-valuenow="{{ score|round|int }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+                
+                <!-- Extracted Skills (From Resume) -->
+                <div class="card bg-light border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-file-earmark-text text-secondary me-2 fs-5"></i>
+                            Extracted Skills <span class="text-muted fw-normal ms-2">(From Resume)</span>
+                        </h6>
+                        <div class="row">
+                            {% for skill in extracted_skills %}
+                            <div class="col-md-6 mb-2">
+                                <i class="bi bi-check text-primary me-2 fw-bold"></i>{{ skill }}
+                            </div>
+                            {% else %}
+                            <div class="col-12 text-muted small">No significant technical skills extracted.</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Skills Grid (Matching, Missing, Weak) -->
+                <div class="row g-4 mb-4">
+                    <!-- Left Column: Matching Skills -->
+                    <div class="col-md-6">
+                        <div class="card bg-light border-0 rounded-3 h-100">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="bi bi-check-circle-fill text-success me-2 fs-5"></i> 
+                                    <h6 class="fw-bold mb-0">Matching Skills</h6>
+                                </div>
+                                <p class="text-muted small mb-3">(From Job Description)</p>
+                                
+                                <div class="mt-3">
+                                    {% for skill in gap.res_has_all %}
+                                    <div class="mb-2"><i class="bi bi-check text-primary me-2 fw-bold"></i>{{ skill }}</div>
+                                    {% else %}
+                                    <div class="text-muted small">No matching skills found.</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Missing & Weak Skills -->
+                    <div class="col-md-6">
+                        <div class="d-flex flex-column gap-4 h-100">
+                            
+                            <!-- Missing Skills -->
+                            <div class="card bg-light border-0 rounded-3 flex-grow-1">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                        <i class="bi bi-x-circle-fill text-danger me-2 fs-5"></i> Missing Skills
+                                    </h6>
+                                    <div>
+                                        {% for skill in gap.technical %}
+                                        <div class="mb-2 d-flex align-items-center text-danger">
+                                            <i class="bi bi-x text-danger fw-bold me-2"></i>{{ skill }} <i class="bi bi-x ms-2 text-danger opacity-75"></i>
+                                        </div>
+                                        {% else %}
+                                        <div class="text-muted small">No critical missing skills.</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Weak Skills -->
+                            {% if gap.soft %}
+                            <div class="card bg-light border-0 rounded-3 flex-grow-1">
+                                <div class="card-body p-4">
+                                    <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                        <i class="bi bi-exclamation-triangle-fill text-warning me-2 fs-5"></i> Weak Skills
+                                    </h6>
+                                    <div>
+                                        {% for skill in gap.soft %}
+                                        <div class="mb-2 d-flex align-items-center text-dark">
+                                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>{{ skill }}
+                                        </div>
+                                        <div class="text-muted small ms-4 mb-3">(basic level)</div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recommendations -->
+                <div class="card bg-light border-0 rounded-3 mb-4">
+                    <div class="card-body p-4">
+                        <h6 class="fw-bold mb-3 d-flex align-items-center">
+                            <i class="bi bi-lightbulb-fill text-warning me-2 fs-5"></i> Recommendations
+                        </h6>
+                        <ul class="list-unstyled mb-0 ms-1">
+                            {% for skill in gap.technical[:3] %}
+                            <li class="mb-2"><i class="bi bi-capslock-fill text-warning me-2" style="transform: rotate(90deg); display: inline-block;"></i>Learn <strong>{{ skill }}</strong> for core competency</li>
+                            {% endfor %}
+                            {% for skill in gap.soft[:2] %}
+                            <li class="mb-2"><i class="bi bi-capslock-fill text-warning me-2" style="transform: rotate(90deg); display: inline-block;"></i>Improve <strong>{{ skill }}</strong> concepts</li>
+                            {% endfor %}
+                            {% if not gap.technical and not gap.soft %}
+                            <li class="mb-2"><i class="bi bi-capslock-fill text-success me-2" style="transform: rotate(90deg); display: inline-block;"></i>Maintain your current skill set and focus on advanced projects.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+                
+                <!-- Final AI Feedback Callout -->
+                <div class="p-4 rounded-3 mt-4" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                    <div class="d-flex align-items-center">
+                        <span class="fs-3 me-3">👉</span>
+                        <h6 class="mb-0 text-dark fw-medium" style="line-height: 1.5;">
+                            {% if score >= 80 %}
+                                You are an excellent fit! You possess the core skills needed for this role.
+                            {% elif score >= 60 %}
+                                You are a good fit but <strong>need improvement in core required skills</strong>.
+                            {% else %}
+                                You have a low match score. Significant improvement in missing skills is required.
+                            {% endif %}
+                        </h6>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .custom-success-bg {
+        background-color: #4CAF50 !important;
+    }
+</style>
+
+{% elif role == "Recruiter" %}
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3"><i class="bi bi-list-check text-primary me-2"></i>Targeted Job Requirements</h5>
+            <div class="d-flex flex-wrap gap-2">
+                {% for req in job_requirements %}
+                    <span class="badge bg-light text-dark border border-secondary-subtle px-3 py-2 rounded-pill shadow-sm small">
+                        <i class="bi bi-check2-circle text-success me-1"></i>{{ req }}
+                    </span>
+                {% else %}
+                    <span class="text-muted small">No specific skills extracted from JD.</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4 overflow-hidden mb-4">
+    <div class="card-header bg-white p-4 border-bottom">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-1 fw-bold text-dark">Candidate Rankings</h4>
+                <p class="mb-0 text-muted small">Analyzing resumes and ranking candidates based on match score.</p>
+            </div>
+            <div class="text-end">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2"><i class="bi bi-people-fill me-2"></i>{{ candidates|length }} Candidates Analyzed</span>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 border-0">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th class="ps-4 text-muted fw-semibold py-3 border-0">Rank</th>
+                        <th class="text-muted fw-semibold py-3 border-0">Candidate</th>
+                        <th class="text-muted fw-semibold py-3 border-0 text-center">Match Score</th>
+                        <th class="text-muted fw-semibold py-3 border-0">Matching Skills</th>
+                        <th class="text-muted fw-semibold py-3 border-0">Missing Skills</th>
+                        <th class="text-muted fw-semibold py-3 border-0">Weak Skills</th>
+                        <th class="text-muted fw-semibold py-3 border-0 text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for cand in candidates %}
+                    <tr>
+                        <td class="ps-4">
+                            {% if loop.index == 1 %}
+                                <div class="d-flex justify-content-center align-items-center bg-warning bg-opacity-25 rounded-circle" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-trophy-fill text-warning fs-5"></i>
+                                </div>
+                            {% elif loop.index == 2 %}
+                                <div class="d-flex justify-content-center align-items-center bg-secondary bg-opacity-25 rounded-circle" style="width: 40px; height: 40px;">
+                                    <i class="bi bi-award-fill text-secondary fs-5"></i>
+                                </div>
+                            {% elif loop.index == 3 %}
+                                <div class="d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; background-color: rgba(205, 127, 50, 0.25); border-radius: 50%;">
+                                    <i class="bi bi-award-fill fs-5" style="color: #cd7f32;"></i>
+                                </div>
+                            {% else %}
+                                <div class="d-flex justify-content-center align-items-center bg-light text-secondary rounded-circle fw-bold" style="width: 40px; height: 40px;">
+                                    {{ loop.index }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <img src="{{ cand.photo }}" alt="{{ cand.name }}" class="rounded-circle me-3 shadow-sm" style="width: 52px; height: 52px; object-fit: cover; border: 2px solid #fff;">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">{{ cand.name }}</h6>
+                                    <div class="text-muted small mb-2">{{ job_role }}</div>
+                                    {% if cand.status == 'Shortlisted' %}
+                                        <span class="badge bg-primary rounded-pill small"><i class="bi bi-check-circle-fill me-1"></i>Shortlisted</span>
+                                    {% elif cand.status == 'Consider' %}
+                                        <span class="badge bg-warning text-dark rounded-pill small"><i class="bi bi-dash-circle-fill me-1"></i>Consider</span>
+                                    {% else %}
+                                        <span class="badge bg-danger rounded-pill small"><i class="bi bi-x-circle-fill me-1"></i>Rejected</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if cand.score >= 75 %}
+                                <span class="badge bg-success fs-5 px-3 py-2 shadow-sm" style="border-radius: 8px;">{{ cand.score }}%</span>
+                            {% elif cand.score >= 60 %}
+                                <span class="badge bg-warning text-dark fs-5 px-3 py-2 shadow-sm" style="border-radius: 8px;">{{ cand.score }}%</span>
+                            {% else %}
+                                <span class="badge bg-danger fs-5 px-3 py-2 shadow-sm" style="border-radius: 8px;">{{ cand.score }}%</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                {% for skill in cand.matching[:3] %}
+                                    <li class="mb-1 text-dark small"><i class="bi bi-check text-success fs-5 me-1 fw-bold"></i>{{ skill }}</li>
+                                {% else %}
+                                    <li class="text-muted small">None</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                {% for skill in cand.missing[:3] %}
+                                    <li class="mb-1 text-danger small"><i class="bi bi-x text-danger fs-5 me-1 fw-bold"></i>{{ skill }}</li>
+                                {% else %}
+                                    <li class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>None</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                {% for skill in cand.weak[:2] %}
+                                    <li class="mb-1 text-dark small"><i class="bi bi-exclamation-triangle-fill text-warning me-1"></i>{{ skill }}</li>
+                                {% else %}
+                                    <li class="text-muted small">None</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-medium shadow-sm" data-bs-toggle="modal" data-bs-target="#candModal{{ loop.index }}">
+                                <i class="bi bi-eye me-1"></i> View Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modals outside of table for HTML validity -->
+{% for cand in candidates %}
+<div class="modal fade" id="candModal{{ loop.index }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 rounded-4 shadow-lg">
+            <div class="modal-header border-bottom-0 p-4 pb-0">
+                <h5 class="modal-title fw-bold text-dark">Candidate Profile Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="candReport{{ loop.index }}">
+                <div class="row g-4">
+                    <div class="col-md-4 text-center">
+                        <div class="position-relative d-inline-block mb-3">
+                            <img src="{{ cand.photo }}" alt="{{ cand.name }}" class="rounded-circle shadow" style="width: 140px; height: 140px; border: 5px solid #fff; object-fit: cover;">
+                            <div class="position-absolute bottom-0 end-0">
+                                {% if cand.status == 'Shortlisted' %}
+                                    <div class="bg-success text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;"><i class="bi bi-check-lg"></i></div>
+                                {% elif cand.status == 'Consider' %}
+                                    <div class="bg-warning text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;"><i class="bi bi-dash"></i></div>
+                                {% else %}
+                                    <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 32px; height: 32px;"><i class="bi bi-x"></i></div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <h4 class="mb-1 fw-bold">{{ cand.name }}</h4>
+                        <div class="text-primary fw-bold fs-3 mb-2">{{ cand.score }}% <span class="fs-6 text-muted fw-normal">Score</span></div>
+                        <span class="badge {% if cand.status == 'Shortlisted' %}bg-primary{% elif cand.status == 'Consider' %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill px-3 py-2 mb-3">
+                            {{ cand.status }}
+                        </span>
+                    </div>
+                    
+                    <div class="col-md-8">
+                        <div class="card bg-light border-0 rounded-4 mb-4">
+                            <div class="card-body p-4">
+                                <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                    <i class="bi bi-person-badge text-primary me-2"></i> Contact Details
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-white p-2 rounded-3 me-3 shadow-sm"><i class="bi bi-envelope text-primary"></i></div>
+                                            <div>
+                                                <small class="text-muted d-block">Email Address</small>
+                                                <span class="text-dark fw-semibold">{{ cand.email }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="bg-white p-2 rounded-3 me-3 shadow-sm"><i class="bi bi-telephone text-primary"></i></div>
+                                            <div>
+                                                <small class="text-muted d-block">Phone Number</small>
+                                                <span class="text-dark fw-semibold">{{ cand.phone }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-white p-2 rounded-3 me-3 shadow-sm"><i class="bi bi-geo-alt text-primary"></i></div>
+                                            <div>
+                                                <small class="text-muted d-block">Address / Location</small>
+                                                <span class="text-dark fw-semibold">{{ cand.address }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-3 d-flex align-items-center">
+                                <i class="bi bi-award text-warning me-2"></i> Key Skills identified
+                            </h6>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for skill in cand.top_skills %}
+                                    <span class="badge bg-white text-dark border border-primary-subtle px-3 py-2 rounded-pill shadow-sm small fw-medium">
+                                        {{ skill }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div>
+                            <h6 class="fw-bold mb-2">Match Analysis:</h6>
+                            <p class="text-muted small p-3 bg-light rounded-3 border-start border-4 border-primary" style="line-height: 1.6;">
+                                {{ cand.summary }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer border-0 p-4 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+                <button id="dlBtn{{ loop.index }}" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" 
+                        onclick="downloadReportPDF('candReport{{ loop.index }}', '{{ cand.name|escape }}', 'dlBtn{{ loop.index }}')">
+                    <i class="bi bi-file-earmark-pdf me-2"></i> Download PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<div class="d-flex justify-content-end gap-2 mt-5">
+    <button class="btn btn-outline-secondary rounded-pill px-4 shadow-sm" onclick="window.print()">
+        <i class="bi bi-printer me-2"></i> Print Table
+    </button>
+    <button class="btn btn-primary rounded-pill px-4 shadow-sm" onclick="exportToCSV()">
+        <i class="bi bi-file-earmark-spreadsheet me-2"></i> Export All (CSV)
+    </button>
+</div>
+
+<script>
+    function downloadReportPDF(elementId, candName, btnId) {
+        const btn = document.getElementById(btnId);
+        const sourceElement = document.getElementById(elementId);
+        const originalHtml = btn.innerHTML;
+        
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Generating...';
+
+        // Clone element to body to ensure it's rendered correctly outside of the modal
+        const element = sourceElement.cloneNode(true);
+        element.style.position = 'absolute';
+        element.style.left = '-9999px';
+        element.style.top = '0';
+        element.style.width = '800px'; // Set a fixed width for consistent rendering
+        element.style.background = 'white';
+        element.classList.add('pdf-export-mode');
+        document.body.appendChild(element);
+
+        const opt = {
+            margin:       [0.5, 0.5],
+            filename:     `${candName.replace(/\s+/g, '_')}_Analysis.pdf`,
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true, 
+                letterRendering: true, 
+                backgroundColor: '#ffffff'
+            },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            document.body.removeChild(element);
+        }).catch(err => {
+            console.error('PDF Export Error:', err);
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            if (document.body.contains(element)) document.body.removeChild(element);
+            alert('Failed to generate PDF. Please try again.');
+        });
+    }
+
+    function downloadCandidatePDF() {
+        const btn = document.getElementById('pdfDownloadBtn');
+        const text = document.getElementById('pdfBtnText');
+        const loading = document.getElementById('pdfBtnLoading');
+        const sourceElement = document.getElementById('candidateReport');
+        
+        btn.disabled = true;
+        text.classList.add('d-none');
+        loading.classList.remove('d-none');
+
+        // Clone element to body
+        const element = sourceElement.cloneNode(true);
+        element.style.position = 'absolute';
+        element.style.left = '-9999px';
+        element.style.top = '0';
+        element.style.width = '800px';
+        element.style.background = 'white';
+        element.classList.add('pdf-export-mode');
+        document.body.appendChild(element);
+
+        const opt = {
+            margin:       [0.3, 0.3],
+            filename:     'SmartScreen_AI_Resume_Analysis.pdf',
+            image:        { type: 'jpeg', quality: 0.98 },
+            html2canvas:  { 
+                scale: 2, 
+                useCORS: true, 
+                letterRendering: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        html2pdf().set(opt).from(element).save().then(() => {
+            btn.disabled = false;
+            text.classList.remove('d-none');
+            loading.classList.add('d-none');
+            document.body.removeChild(element);
+        }).catch(err => {
+            console.error('PDF Error:', err);
+            btn.disabled = false;
+            text.classList.remove('d-none');
+            loading.classList.add('d-none');
+            if (document.body.contains(element)) document.body.removeChild(element);
+            alert('Failed to generate PDF.');
+        });
+    }
+
+    function exportToCSV() {
+        const candidates = {{ (candidates if candidates else []) | tojson }};
+        let csv = 'Rank,Name,Score,Status,Email,Phone,Address,Skills\n';
+        
+        candidates.forEach((cand, index) => {
+            const row = [
+                index + 1,
+                `"${cand.name}"`,
+                `${cand.score}%`,
+                `"${cand.status}"`,
+                `"${cand.email}"`,
+                `"${cand.phone}"`,
+                `"${cand.address}"`,
+                `"${cand.top_skills.join(', ')}"`
+            ];
+            csv += row.join(',') + '\n';
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'Recruiter_Screening_Results.csv';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+    }
+</script>
+
+<style>
+    .modal-content { animation: modalSlideUp 0.3s ease-out; }
+    @keyframes modalSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    
+    /* PDF Export Styles */
+    .pdf-export-mode {
+        background-color: white !important;
+        color: #333 !important;
+        padding: 20px !important;
+    }
+    .pdf-export-mode .card {
+        box-shadow: none !important;
+        border: 1px solid #eee !important;
+    }
+    .pdf-export-mode .text-white {
+        color: #333 !important;
+    }
+    .pdf-export-mode .bg-primary, .pdf-export-mode .custom-success-bg {
+        -webkit-print-color-adjust: exact;
+    }
+</style>
+{% endif %}
+{% endblock %}

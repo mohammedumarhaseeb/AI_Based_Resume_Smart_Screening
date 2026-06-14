@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-5">
+        <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white p-4 text-center">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SmartScreen AI Logo" class="img-fluid mb-2" style="max-height: 60px; filter: brightness(0) invert(1);">
+                <h4 class="mb-0 fw-bold">Recruiter Login</h4>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    {% for category, message in messages %}
+                      <div class="alert alert-{{ category }} rounded-3 small mb-4">{{ message }}</div>
+                    {% endfor %}
+                  {% endif %}
+                {% endwith %}
+
+                <form action="{{ url_for('login') }}" method="POST">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-secondary">EMAIL ADDRESS</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                            <input type="email" name="email" class="form-control bg-light border-start-0" placeholder="admin@example.com" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-secondary">PASSWORD</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" class="form-control bg-light border-start-0" placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary py-2 fw-bold rounded-3">Sign In</button>
+                    </div>
+                </form>
+
+                <div class="text-center my-4">
+                    <div class="position-relative">
+                        <hr class="text-muted opacity-25">
+                        <span class="position-absolute top-50 start-50 translate-middle bg-white px-3 text-muted small">OR</span>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="button" class="btn btn-outline-dark py-2 rounded-3 d-flex align-items-center justify-content-center" onclick="showGoogleModal()">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" class="me-2" style="width: 18px;">
+                        Sign in with Google
+                    </button>
+                </div>
+            </div>
+        </div>
+        <p class="text-center mt-4 text-muted small">Don't have an account? <a href="#" class="text-primary text-decoration-none fw-bold">Contact Admin</a></p>
+    </div>
+</div>
+
+<!-- Mock Google Login Modal -->
+<div class="modal fade" id="googleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content border-0 rounded-4 shadow-lg overflow-hidden">
+            <div class="p-4 text-center">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" alt="Google" class="mb-3" style="width: 48px;">
+                <h5 class="fw-bold mb-1">Choose an account</h5>
+                <p class="text-muted small">to continue to SmartScreen AI</p>
+                
+                <div class="list-group list-group-flush text-start mt-4">
+                    <button type="button" class="list-group-item list-group-item-action border-0 px-0 py-3 d-flex align-items-center" onclick="mockGoogleLogin('admin@example.com')">
+                        <img src="https://ui-avatars.com/api/?name=Admin+User&background=0D8ABC&color=fff" class="rounded-circle me-3" style="width: 32px;">
+                        <div>
+                            <div class="fw-bold small">Admin User</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">admin@example.com</div>
+                        </div>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action border-0 px-0 py-3 d-flex align-items-center" onclick="mockGoogleLogin('recruiter@company.com')">
+                        <img src="https://ui-avatars.com/api/?name=Recruiter+Main&background=2ecc71&color=fff" class="rounded-circle me-3" style="width: 32px;">
+                        <div>
+                            <div class="fw-bold small">Recruiter Main</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">recruiter@company.com</div>
+                        </div>
+                    </button>
+                    <button type="button" class="list-group-item list-group-item-action border-0 px-0 py-3 d-flex align-items-center">
+                        <i class="bi bi-person-circle me-3 fs-5 text-muted"></i>
+                        <span class="small">Use another account</span>
+                    </button>
+                </div>
+            </div>
+            <div class="bg-light p-3 text-center border-top">
+                <p class="x-small text-muted mb-0">To continue, Google will share your name, email address, and profile picture with SmartScreen AI.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form id="mockGoogleForm" action="{{ url_for('login') }}" method="POST" style="display: none;">
+    <input type="hidden" name="email" id="mockEmail">
+    <input type="hidden" name="password" value="password123"> <!-- Mock password match -->
+</form>
+
+<script>
+    function showGoogleModal() {
+        const modal = new bootstrap.Modal(document.getElementById('googleModal'));
+        modal.show();
+    }
+    
+    function mockGoogleLogin(email) {
+        document.getElementById('mockEmail').value = email;
+        document.getElementById('mockGoogleForm').submit();
+    }
+</script>
+
+<style>
+    .x-small { font-size: 0.7rem; }
+</style>
+{% endblock %}

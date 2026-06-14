@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        
+        <div class="text-center mb-4">
+            <h2 class="text-white">Simulation Results</h2>
+            {% if 'LIFTS' in result %}
+                <span class="badge bg-success p-2 fs-6">Antigravity Achieved</span>
+            {% else %}
+                <span class="badge bg-danger p-2 fs-6">Gravity Wins</span>
+            {% endif %}
+        </div>
+
+        <div class="row g-4 mb-5 text-center">
+            <div class="col-md-3">
+                <div class="glass-card p-3">
+                    <p class="text-muted mb-1 small">Mass</p>
+                    <h5 class="text-white mb-0">{{ mass }} kg</h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card p-3">
+                    <p class="text-muted mb-1 small">Height</p>
+                    <h5 class="text-white mb-0">{{ distance }} m</h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card p-3 border-danger">
+                    <p class="text-danger mb-1 small">Calculated Gravity</p>
+                    <h5 class="text-danger mb-0">{{ gravity_force }} N</h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="glass-card p-3 border-primary">
+                    <p class="text-primary mb-1 small">Opposing Force</p>
+                    <h5 class="text-primary mb-0">{{ opposing_force }} N</h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card p-4 text-center fade-in-up">
+            <h3 class="h4 mb-4 text-white">Decision: <span class="{% if 'LIFTS' in result %}text-success{% else %}text-danger{% endif %}">{{ result }}</span></h3>
+            
+            <hr style="border-color: rgba(255,255,255,0.1);">
+            
+            <h4 class="mb-3 text-white mt-4">Force Visualization</h4>
+            <p class="text-muted mb-4">The graph below compares the forces at different heights.</p>
+            <div class="bg-white p-2 rounded d-inline-block">
+                <!-- Use dynamic cache busting to ensure new generated graphs are loaded -->
+                <img src="{{ url_for('static', filename=graph_path) }}?v={{ range(1, 10000) | random }}" alt="Force Graph" class="img-fluid rounded">
+            </div>
+            
+            <div class="mt-4">
+                <a href="{{ url_for('simulate') }}" class="btn btn-outline-custom">Run Another Simulation</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

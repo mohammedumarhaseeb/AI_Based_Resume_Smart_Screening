@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white p-4 text-center">
+                <img src="{{ url_for('static', filename='img/logo.png') }}" alt="SmartScreen AI Logo" class="img-fluid mb-3" style="max-height: 80px; filter: brightness(0) invert(1);">
+                <h3 class="mb-1">Candidate Portal</h3>
+                <p class="mb-0 opacity-75">Enhance your application with AI-powered skill matching</p>
+            </div>
+            <div class="card-body p-4 p-md-5">
+                <form action="{{ url_for('candidate') }}" method="POST" enctype="multipart/form-data" id="analysisForm">
+                    
+                    <!-- 1. Job Role Selection -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-flex align-items-center">
+                            <i class="bi bi-briefcase me-2 text-primary"></i> 1. Select Job Role
+                        </label>
+                        <select name="job_role_select" id="job_role_select" class="form-select form-select-lg" required onchange="handleRoleChange()">
+                            <option value="" selected disabled>Choose a role...</option>
+                            <option value="Data Analyst">Data Analyst</option>
+                            <option value="Data Scientist">Data Scientist</option>
+                            <option value="Machine Learning Engineer">Machine Learning Engineer</option>
+                            <option value="Business Analyst">Business Analyst</option>
+                            <option value="Software Engineer">Software Engineer</option>
+                            <option value="AI Engineer">AI Engineer</option>
+                            <option value="Other">Other (Type Manually)</option>
+                        </select>
+                        
+                        <div id="custom_role_wrapper" class="mt-3 d-none">
+                            <input type="text" name="job_role_custom" id="job_role_custom" class="form-control" placeholder="Enter your specific job role...">
+                        </div>
+                    </div>
+
+                    <!-- 2. Resume Upload -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-flex align-items-center">
+                            <i class="bi bi-file-earmark-arrow-up me-2 text-primary"></i> 2. Upload Resume (PDF/DOCX/Images)
+                        </label>
+                        <div class="input-group">
+                            <input type="file" name="resume" accept=".pdf,.docx,.jpg,.png,.jpeg" class="form-control" required>
+                        </div>
+                        <small class="text-muted mt-1 d-block">Accepted formats: PDF, DOCX, JPG, PNG (Max: 5MB)</small>
+                    </div>
+
+                    <!-- 3. Paste Job Description -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold d-flex align-items-center">
+                            <i class="bi bi-card-text me-2 text-primary"></i> 3. Paste Job Description
+                        </label>
+                        <textarea name="job_desc" id="job_desc" class="form-control" rows="6" placeholder="Select a role to auto-fill or paste manually..." required></textarea>
+                    </div>
+
+                    <div class="d-grid gap-2 mt-5">
+                        <button type="submit" id="submitBtn" class="btn btn-primary btn-lg rounded-pill py-3 fw-bold shadow-sm">
+                            <span id="btnText"><i class="bi bi-cpu me-2"></i> Analyze Resume</span>
+                            <span id="btnLoader" class="d-none">
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                Processing Resume...
+                            </span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<script>
+    const jobDescriptions = {
+        "Data Analyst": "We are looking for a Data Analyst skilled in Python, SQL, Excel, Data Visualization, Power BI, and Statistics to analyze data and generate insights.",
+        "Data Scientist": "We are looking for a Data Scientist with expertise in Python, Machine Learning, Statistics, Data Modeling, and Big Data technologies to solve complex problems.",
+        "Machine Learning Engineer": "We are looking for a Machine Learning Engineer to build and deploy ML models using Python, TensorFlow, PyTorch, and Docker.",
+        "Business Analyst": "We are looking for a Business Analyst to bridge the gap between IT and business using SQL, Data Visualization, and strong communication skills.",
+        "Software Engineer": "We are looking for a Software Engineer proficient in Java/Python, Web Development (React/Angular), SQL, and Git.",
+        "AI Engineer": "We are looking for an AI Engineer to develop AI solutions using NLP, Deep Learning, Generative AI models, and Python."
+    };
+
+    function handleRoleChange() {
+        const roleSelect = document.getElementById('job_role_select');
+        const customWrapper = document.getElementById('custom_role_wrapper');
+        const customInput = document.getElementById('job_role_custom');
+        const jdTextArea = document.getElementById('job_desc');
+        const selectedRole = roleSelect.value;
+        
+        if (selectedRole === 'Other') {
+            customWrapper.classList.remove('d-none');
+            customInput.required = true;
+            jdTextArea.value = '';
+        } else {
+            customWrapper.classList.add('d-none');
+            customInput.required = false;
+            if (jobDescriptions[selectedRole]) {
+                jdTextArea.value = jobDescriptions[selectedRole];
+            }
+        }
+    }
+
+    document.getElementById('analysisForm').addEventListener('submit', function() {
+        const btn = document.getElementById('submitBtn');
+        const text = document.getElementById('btnText');
+        const loader = document.getElementById('btnLoader');
+        
+        btn.disabled = true;
+        text.classList.add('d-none');
+        loader.classList.remove('d-none');
+    });
+</script>
+
+<style>
+    .card {
+        transition: transform 0.3s ease;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+    .btn-primary {
+        background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+        border: none;
+    }
+    .btn-primary:hover {
+        background: linear-gradient(45deg, #0b5ed7, #0a58ca);
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}

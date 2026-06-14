@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="glass-card p-5">
+            <div class="text-center mb-4">
+                <h2 class="text-white">Run Simulation</h2>
+                <p class="text-muted">Enter the parameters below to determine if the object will levitate.</p>
+            </div>
+            
+            <form action="{{ url_for('simulate') }}" method="POST">
+                <div class="mb-4">
+                    <label for="mass" class="form-label">Mass of Object (kg)</label>
+                    <input type="number" step="0.01" class="form-control form-control-lg" id="mass" name="mass" placeholder="e.g. 10.5" required>
+                    <div class="form-text mt-2 text-white-50">The mass determines the strength of the downward gravitational pull.</div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="distance" class="form-label">Height / Distance (m)</label>
+                    <input type="number" step="0.01" class="form-control form-control-lg" id="distance" name="distance" placeholder="e.g. 5" required>
+                    <div class="form-text mt-2 text-white-50">Height above the surface where the object is placed.</div>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="opposing_force" class="form-label">Opposing Force (N)</label>
+                    <input type="number" step="0.01" class="form-control form-control-lg" id="opposing_force" name="opposing_force" placeholder="e.g. 150.0" required>
+                    <div class="form-text mt-2 text-white-50">The upward push (e.g., from a magnet or electrostatic field).</div>
+                </div>
+                
+                <div class="d-grid mt-5">
+                    <button type="submit" class="btn btn-custom btn-lg">Calculate & Simulate</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
